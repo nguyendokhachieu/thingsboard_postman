@@ -1,0 +1,1448 @@
+{
+	"info": {
+		"_postman_id": "1eb95d98-6f13-4710-8f80-1f7cc51556b8",
+		"name": "thingsboard",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"let ite = pm.info.iteration;\r",
+							"\r",
+							"switch (ite) {\r",
+							"    // Login successfully\r",
+							"    case 0:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
+							"        pm.test(`Token is not blank`, function () {\r",
+							"            pm.expect(responseData.token).not.to.be.empty;\r",
+							"        });\r",
+							"        pm.environment.set(\"token\", responseData.token);\r",
+							"        pm.environment.set(\"refreshToken\", responseData.refreshToken);\r",
+							"        break;\r",
+							"\r",
+							"    // Incorrect username\r",
+							"    case 1:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        pm.test(`Error message is correct`, function () {\r",
+							"            pm.expect(responseData.message).to.equal(\"Invalid username or password\");\r",
+							"        });\r",
+							"        postman.setNextRequest(null);\r",
+							"        break;\r",
+							"\r",
+							"    // Incorrect password\r",
+							"    case 2:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        pm.test(`Error message is correct`, function () {\r",
+							"            pm.expect(responseData.message).to.equal(\"Invalid username or password\");\r",
+							"        });\r",
+							"        postman.setNextRequest(null);\r",
+							"        break;\r",
+							"\r",
+							"    // Password is blank\r",
+							"    case 3:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        pm.test(`Error message is correct`, function () {\r",
+							"            pm.expect(responseData.message).to.equal(\"Authentication failed\");\r",
+							"        });\r",
+							"        postman.setNextRequest(null);\r",
+							"        break;\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "origin",
+						"value": "https://demo.thingsboard.io"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/login"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"username\":\"{{username}}\",\"password\":\"{{password}}\"}"
+				},
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/auth/login",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create new device profile",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let randomString = Math.random().toString(36);\r",
+							"pm.environment.set(\"device_profile_name\", \"dv_pf_\" + randomString);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.environment.set(\"device_profile_id\", responseData.id.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "origin",
+						"value": "https://demo.thingsboard.io"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/profiles/deviceProfiles"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer  {{token}}",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\":\"{{device_profile_name}}\",\"type\":\"DEFAULT\",\"image\":null,\"defaultQueueName\":null,\"transportType\":\"DEFAULT\",\"provisionType\":\"DISABLED\",\"description\":\"\",\"profileData\":{\"configuration\":{\"type\":\"DEFAULT\"},\"transportConfiguration\":{\"type\":\"DEFAULT\"},\"alarms\":null,\"provisionConfiguration\":{\"type\":\"DISABLED\"}}}"
+				},
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/deviceProfile",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"deviceProfile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get device profile by Id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"let deviceProfileId = pm.environment.get(\"device_profile_id\");\r",
+							"let deviceProfileName = pm.environment.get(\"device_profile_name\");\r",
+							"\r",
+							"pm.test(`deviceProfileId is correct`, function () {\r",
+							"    pm.expect(responseData.id.id).to.equal(deviceProfileId);\r",
+							"});\r",
+							"\r",
+							"pm.test(`deviceProfileName is correct`, function () {\r",
+							"    pm.expect(responseData.name).to.equal(deviceProfileName);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/profiles/deviceProfiles"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
+					}
+				],
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/deviceProfile/{{device_profile_id}}",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"deviceProfile",
+						"{{device_profile_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get list of device profiles",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"let deviceProfileIds = [];\r",
+							"responseData.data.forEach((item, _) => {\r",
+							"    deviceProfileIds.push(item.id.id);\r",
+							"});\r",
+							"\r",
+							"let checkDvPfExist = deviceProfileIds.indexOf(pm.environment.get(\"device_profile_id\"));\r",
+							"\r",
+							"pm.test(`Device profile id exists in list`, function () {\r",
+							"    pm.expect(checkDvPfExist).to.greaterThan(-1);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/profiles/deviceProfiles"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/deviceProfiles?pageSize=10&page=0&sortProperty=createdTime&sortOrder=DESC",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"deviceProfiles"
+					],
+					"query": [
+						{
+							"key": "pageSize",
+							"value": "10"
+						},
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "sortProperty",
+							"value": "createdTime"
+						},
+						{
+							"key": "sortOrder",
+							"value": "DESC"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Edit device profile",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"device_profile_name\", pm.environment.get(\"device_profile_name\") + \"_edited\");\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"let deviceProfileId = pm.environment.get(\"device_profile_id\");\r",
+							"let deviceProfileName = pm.environment.get(\"device_profile_name\");\r",
+							"\r",
+							"pm.test(`deviceProfileId is correct`, function () {\r",
+							"    pm.expect(responseData.id.id).to.equal(deviceProfileId);\r",
+							"});\r",
+							"\r",
+							"pm.test(`deviceProfileName is correct`, function () {\r",
+							"    pm.expect(responseData.name).to.equal(deviceProfileName);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "origin",
+						"value": "https://demo.thingsboard.io"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/profiles/deviceProfiles"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"id\":{\"entityType\":\"DEVICE_PROFILE\",\"id\":\"{{device_profile_id}}\"},\"createdTime\":1742374645817,\"tenantId\":{\"entityType\":\"TENANT\",\"id\":\"e1b30a80-0499-11f0-9dbc-834dadad7dd9\"},\"name\":\"{{device_profile_name}}\",\"description\":\"\",\"image\":null,\"type\":\"DEFAULT\",\"transportType\":\"DEFAULT\",\"provisionType\":\"DISABLED\",\"defaultRuleChainId\":null,\"defaultDashboardId\":null,\"defaultQueueName\":null,\"provisionDeviceKey\":null,\"firmwareId\":null,\"softwareId\":null,\"defaultEdgeRuleChainId\":null,\"externalId\":null,\"version\":1,\"default\":false,\"profileData\":{\"configuration\":{\"type\":\"DEFAULT\"},\"transportConfiguration\":{\"type\":\"DEFAULT\"},\"alarms\":null,\"provisionConfiguration\":{\"type\":\"DISABLED\",\"provisionDeviceSecret\":null}}}"
+				},
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/deviceProfile",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"deviceProfile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create new device",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let randomString = Math.random().toString(36);\r",
+							"pm.environment.set(\"device_name\", \"bluetooth_dv_\" + randomString);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.environment.set(\"device_id\", responseData.id.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "origin",
+						"value": "https://demo.thingsboard.io"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/entities/devices"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzA5MDkwOTE5OTlAeW9wbWFpbC5jb20iLCJ1c2VySWQiOiJkYzRmOTA3MS0wM2QzLTExZjAtOWRiYy04MzRkYWRhZDdkZDkiLCJzY29wZXMiOlsiVEVOQU5UX0FETUlOIl0sInNlc3Npb25JZCI6IjVhZGMzZTFkLWE5YzYtNDc4OC05MmJhLTI0YWQ2NWVjN2M1YyIsImV4cCI6MTc0NDA4NjkyNiwiaXNzIjoidGhpbmdzYm9hcmQuaW8iLCJpYXQiOjE3NDIyODY5MjYsImZpcnN0TmFtZSI6InRlc3QiLCJsYXN0TmFtZSI6InRoaW5ncyIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImRhYWViMWIwLTAzZDMtMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.VoK7gwhG70YHI9yb-RSLlcBZCBCYULQ4Em4xbMmJ9SEwfHyLPyRgrRlDSq9x08No-9W-D41gNkg8-x6x4wF3AQ",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\":\"{{device_name}}\",\"label\":\"\",\"deviceProfileId\":{\"entityType\":\"DEVICE_PROFILE\",\"id\":\"{{device_profile_id}}\"},\"additionalInfo\":{\"gateway\":false,\"overwriteActivityTime\":false,\"description\":\"\"},\"customerId\":null}"
+				},
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/device",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"device"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get device by Id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"let deviceId = pm.environment.get(\"device_id\");\r",
+							"let deviceName = pm.environment.get(\"device_name\");\r",
+							"\r",
+							"pm.test(`deviceId is correct`, function () {\r",
+							"    pm.expect(responseData.id.id).to.equal(deviceId);\r",
+							"});\r",
+							"\r",
+							"pm.test(`deviceName is correct`, function () {\r",
+							"    pm.expect(responseData.name).to.equal(deviceName);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/entities/devices"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
+					}
+				],
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/device/info/{{device_id}}",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"device",
+						"info",
+						"{{device_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get list of devices",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"let deviceIds = [];\r",
+							"responseData.data.forEach((item, _) => {\r",
+							"    deviceIds.push(item.id.id);\r",
+							"});\r",
+							"\r",
+							"let checkDvExist = deviceIds.indexOf(pm.environment.get(\"device_id\"));\r",
+							"\r",
+							"pm.test(`Device id exists in list`, function () {\r",
+							"    pm.expect(checkDvExist).to.greaterThan(-1);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/entities/devices"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					}
+				],
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/tenant/deviceInfos?pageSize=10&page=0&sortProperty=createdTime&sortOrder=DESC",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"tenant",
+						"deviceInfos"
+					],
+					"query": [
+						{
+							"key": "pageSize",
+							"value": "10"
+						},
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "sortProperty",
+							"value": "createdTime"
+						},
+						{
+							"key": "sortOrder",
+							"value": "DESC"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Edit device",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"device_name\", pm.environment.get(\"device_name\") + \"_edited\");"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "origin",
+						"value": "https://demo.thingsboard.io"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/entities/devices"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"id\":{\"entityType\":\"DEVICE\",\"id\":\"{{device_id}}\"},\"name\":\"{{device_name}}\",\"type\":\"default\",\"label\":\"\",\"deviceProfileId\":{\"entityType\":\"DEVICE_PROFILE\",\"id\":\"{{device_profile_id}}\"}}"
+				},
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/device",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"device"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete device",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "origin",
+						"value": "https://demo.thingsboard.io"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/entities/devices"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
+					}
+				],
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/device/{{device_id}}",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"device",
+						"{{device_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get device by Id after deleting",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"let expectedMessage = `Device with id [${pm.environment.get(\"device_id\")}] is not found`;\r",
+							"\r",
+							"pm.test(`Message is correct`, function () {\r",
+							"    pm.expect(responseData.message).to.equal(expectedMessage);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/entities/devices"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
+					}
+				],
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/device/info/{{device_id}}",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"device",
+						"info",
+						"{{device_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete device profile",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "origin",
+						"value": "https://demo.thingsboard.io"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/profiles/deviceProfiles"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
+					}
+				],
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/deviceProfile/{{device_profile_id}}",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"deviceProfile",
+						"{{device_profile_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get device profile after deleting",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"let expectedMessage = `Device profile with id [${pm.environment.get(\"device_profile_id\")}] is not found`;\r",
+							"\r",
+							"pm.test(`Message is correct`, function () {\r",
+							"    pm.expect(responseData.message).to.equal(expectedMessage);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
+					},
+					{
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/profiles/deviceProfiles"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "x-authorization",
+						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
+					}
+				],
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/deviceProfile/{{device_profile_id}}",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"deviceProfile",
+						"{{device_profile_id}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
