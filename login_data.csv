@@ -1,5 +1,15 @@
-username,password
-test_20250319@yopmail.com,P@ssw0rdP@ssw0rd
-test_20250319_888@yopmail.com,P@ssw0rdP@ssw0rd
-test_20250319@yopmail.com,P@ssw0
-test_20250319@yopmail.com,
+test_description,apiName,username,password,bearerToken,expectedStatusCode
+0_full_success_flow,,test_20250319@yopmail.com,P@ssw0rdP@ssw0rd,,200
+1_login_api_fail_with_wrong_email,Login,test_20250319_888@yopmail.com,P@ssw0rdP@ssw0rd,,401
+2_login_api_fail_with_wrong_password,Login,test_20250319@yopmail.com,P@ssw0,,401
+3_login_api_fail_with_password_blank,Login,test_20250319@yopmail.com,,,401
+4_create_new_device_profile_api_fail,Create new device profile,,,dummy_token,401
+5_get_device_profile_by_id_api_fail,Get device profile by Id,,,dummy_token,401
+6_get_list_of_device_profiles_api_fail,Get list of device profiles,,,dummy_token,401
+7_edit_device_profile_api_fail,Edit device profile,,,dummy_token,401
+8_create_new_device_api_fail,Create new device,,,dummy_token,401
+9_get_device_by_id_api_fail,Get device by Id,,,dummy_token,401
+10_get_list_of_devices_api_fail,Get list of devices,,,dummy_token,401
+11_edit_device_api_fail,Edit device,,,dummy_token,401
+12_delete_device_api_fail,Delete device,,,dummy_token,401
+13_delete_device _profile_api_fail,Delete device profile,,,dummy_token,401

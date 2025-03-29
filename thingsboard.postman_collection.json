@@ -1,8 +1,9 @@
 {
 	"info": {
-		"_postman_id": "1eb95d98-6f13-4710-8f80-1f7cc51556b8",
+		"_postman_id": "507dee15-66ee-433b-9b10-0838eecd7769",
 		"name": "thingsboard",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15329807"
 	},
 	"item": [
 		{
@@ -36,7 +37,7 @@
 							"        pm.test(`Error message is correct`, function () {\r",
 							"            pm.expect(responseData.message).to.equal(\"Invalid username or password\");\r",
 							"        });\r",
-							"        postman.setNextRequest(null);\r",
+							"        pm.execution.setNextRequest(null);\r",
 							"        break;\r",
 							"\r",
 							"    // Incorrect password\r",
@@ -47,7 +48,7 @@
 							"        pm.test(`Error message is correct`, function () {\r",
 							"            pm.expect(responseData.message).to.equal(\"Invalid username or password\");\r",
 							"        });\r",
-							"        postman.setNextRequest(null);\r",
+							"        pm.execution.setNextRequest(null);\r",
 							"        break;\r",
 							"\r",
 							"    // Password is blank\r",
@@ -58,11 +59,25 @@
 							"        pm.test(`Error message is correct`, function () {\r",
 							"            pm.expect(responseData.message).to.equal(\"Authentication failed\");\r",
 							"        });\r",
-							"        postman.setNextRequest(null);\r",
+							"        pm.execution.setNextRequest(null);\r",
 							"        break;\r",
 							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
@@ -150,10 +165,20 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}\r",
+							"\r",
 							"let randomString = Math.random().toString(36);\r",
-							"pm.environment.set(\"device_profile_name\", \"dv_pf_\" + randomString);"
+							"pm.environment.set(\"device_profile_name\", \"dv_pf_\" + randomString);\r",
+							"\r",
+							"if (pm.iterationData.get(\"bearerToken\") !== \"\") {\r",
+							"    pm.environment.set(\"token\", pm.iterationData.get(\"bearerToken\"));\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				},
 				{
@@ -161,14 +186,30 @@
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();\r",
+							"let ite = pm.info.iteration;\r",
+							"let expectedStatusCode = pm.iterationData.get(\"expectedStatusCode\");\r",
 							"\r",
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
+							"switch (expectedStatusCode) {\r",
+							"    case 401:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        pm.execution.setNextRequest(null)\r",
+							"        break;\r",
 							"\r",
-							"pm.environment.set(\"device_profile_id\", responseData.id.id);"
+							"    case 200:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
+							"        pm.test(\"Device profile name is correct\", function () {\r",
+							"            pm.expect(responseData.name).to.equal(pm.environment.get(\"device_profile_name\"));\r",
+							"        });\r",
+							"        pm.environment.set(\"device_profile_id\", responseData.id.id);\r",
+							"        break;\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
@@ -236,11 +277,6 @@
 					{
 						"key": "user-agent",
 						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-					},
-					{
-						"key": "x-authorization",
-						"value": "Bearer  {{token}}",
-						"disabled": true
 					}
 				],
 				"body": {
@@ -271,125 +307,52 @@
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();\r",
+							"let expectedStatusCode = pm.iterationData.get(\"expectedStatusCode\");\r",
 							"\r",
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
+							"switch (expectedStatusCode) {\r",
+							"    case 401:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        break;\r",
 							"\r",
-							"let deviceProfileId = pm.environment.get(\"device_profile_id\");\r",
-							"let deviceProfileName = pm.environment.get(\"device_profile_name\");\r",
+							"    case 200:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
 							"\r",
-							"pm.test(`deviceProfileId is correct`, function () {\r",
-							"    pm.expect(responseData.id.id).to.equal(deviceProfileId);\r",
-							"});\r",
+							"        let deviceProfileId = pm.environment.get(\"device_profile_id\");\r",
+							"        let deviceProfileName = pm.environment.get(\"device_profile_name\");\r",
 							"\r",
-							"pm.test(`deviceProfileName is correct`, function () {\r",
-							"    pm.expect(responseData.name).to.equal(deviceProfileName);\r",
-							"});\r",
-							""
+							"        pm.test(`deviceProfileId is correct`, function () {\r",
+							"            pm.expect(responseData.id.id).to.equal(deviceProfileId);\r",
+							"        });\r",
+							"\r",
+							"        pm.test(`deviceProfileName is correct`, function () {\r",
+							"            pm.expect(responseData.name).to.equal(deviceProfileName);\r",
+							"        });\r",
+							"        break;\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "accept",
-						"value": "application/json, text/plain, */*"
-					},
-					{
-						"key": "accept-language",
-						"value": "en-US,en;q=0.9"
-					},
-					{
-						"key": "content-type",
-						"value": "application/json"
-					},
-					{
-						"key": "priority",
-						"value": "u=1, i"
-					},
-					{
-						"key": "referer",
-						"value": "https://demo.thingsboard.io/profiles/deviceProfiles"
-					},
-					{
-						"key": "sec-ch-ua",
-						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
-					},
-					{
-						"key": "sec-ch-ua-mobile",
-						"value": "?0"
-					},
-					{
-						"key": "sec-ch-ua-platform",
-						"value": "\"Windows\""
-					},
-					{
-						"key": "sec-fetch-dest",
-						"value": "empty"
-					},
-					{
-						"key": "sec-fetch-mode",
-						"value": "cors"
-					},
-					{
-						"key": "sec-fetch-site",
-						"value": "same-origin"
-					},
-					{
-						"key": "user-agent",
-						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-					},
-					{
-						"key": "x-authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
-					}
-				],
-				"url": {
-					"raw": "https://demo.thingsboard.io/api/deviceProfile/{{device_profile_id}}",
-					"protocol": "https",
-					"host": [
-						"demo",
-						"thingsboard",
-						"io"
-					],
-					"path": [
-						"api",
-						"deviceProfile",
-						"{{device_profile_id}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get list of device profiles",
-			"event": [
+				},
 				{
-					"listen": "test",
+					"listen": "prerequest",
 					"script": {
 						"exec": [
-							"let responseData = pm.response.json();\r",
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}\r",
 							"\r",
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
-							"\r",
-							"let deviceProfileIds = [];\r",
-							"responseData.data.forEach((item, _) => {\r",
-							"    deviceProfileIds.push(item.id.id);\r",
-							"});\r",
-							"\r",
-							"let checkDvPfExist = deviceProfileIds.indexOf(pm.environment.get(\"device_profile_id\"));\r",
-							"\r",
-							"pm.test(`Device profile id exists in list`, function () {\r",
-							"    pm.expect(checkDvPfExist).to.greaterThan(-1);\r",
-							"});"
+							"if (pm.iterationData.get(\"bearerToken\") !== \"\") {\r",
+							"    pm.environment.set(\"token\", pm.iterationData.get(\"bearerToken\"));\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
@@ -453,11 +416,142 @@
 					{
 						"key": "user-agent",
 						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+					}
+				],
+				"url": {
+					"raw": "https://demo.thingsboard.io/api/deviceProfile/{{device_profile_id}}",
+					"protocol": "https",
+					"host": [
+						"demo",
+						"thingsboard",
+						"io"
+					],
+					"path": [
+						"api",
+						"deviceProfile",
+						"{{device_profile_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get list of device profiles",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseData = pm.response.json();\r",
+							"let expectedStatusCode = pm.iterationData.get(\"expectedStatusCode\");\r",
+							"\r",
+							"switch (expectedStatusCode) {\r",
+							"    case 401:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        break;\r",
+							"\r",
+							"    case 200:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
+							"\r",
+							"        let deviceProfileIds = [];\r",
+							"        responseData.data.forEach((item, _) => {\r",
+							"            deviceProfileIds.push(item.id.id);\r",
+							"        });\r",
+							"\r",
+							"        let checkDvPfExist = deviceProfileIds.indexOf(pm.environment.get(\"device_profile_id\"));\r",
+							"\r",
+							"        pm.test(`Device profile id exists in list`, function () {\r",
+							"            pm.expect(checkDvPfExist).to.greaterThan(-1);\r",
+							"        });\r",
+							"        break;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}\r",
+							"\r",
+							"if (pm.iterationData.get(\"bearerToken\") !== \"\") {\r",
+							"    pm.environment.set(\"token\", pm.iterationData.get(\"bearerToken\"));\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json, text/plain, */*"
 					},
 					{
-						"key": "x-authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ",
-						"disabled": true
+						"key": "accept-language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					},
+					{
+						"key": "priority",
+						"value": "u=1, i"
+					},
+					{
+						"key": "referer",
+						"value": "https://demo.thingsboard.io/profiles/deviceProfiles"
+					},
+					{
+						"key": "sec-ch-ua",
+						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
+					},
+					{
+						"key": "sec-ch-ua-mobile",
+						"value": "?0"
+					},
+					{
+						"key": "sec-ch-ua-platform",
+						"value": "\"Windows\""
+					},
+					{
+						"key": "sec-fetch-dest",
+						"value": "empty"
+					},
+					{
+						"key": "sec-fetch-mode",
+						"value": "cors"
+					},
+					{
+						"key": "sec-fetch-site",
+						"value": "same-origin"
+					},
+					{
+						"key": "user-agent",
+						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
 					}
 				],
 				"url": {
@@ -501,10 +595,20 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}\r",
+							"\r",
+							"if (pm.iterationData.get(\"bearerToken\") !== \"\") {\r",
+							"    pm.environment.set(\"token\", pm.iterationData.get(\"bearerToken\"));\r",
+							"}\r",
+							"\r",
 							"pm.environment.set(\"device_profile_name\", pm.environment.get(\"device_profile_name\") + \"_edited\");\r",
 							""
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				},
 				{
@@ -512,28 +616,49 @@
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();\r",
+							"let expectedStatusCode = pm.iterationData.get(\"expectedStatusCode\");\r",
 							"\r",
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
+							"switch (expectedStatusCode) {\r",
+							"    case 401:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        break;\r",
 							"\r",
-							"let deviceProfileId = pm.environment.get(\"device_profile_id\");\r",
-							"let deviceProfileName = pm.environment.get(\"device_profile_name\");\r",
-							"\r",
-							"pm.test(`deviceProfileId is correct`, function () {\r",
-							"    pm.expect(responseData.id.id).to.equal(deviceProfileId);\r",
-							"});\r",
-							"\r",
-							"pm.test(`deviceProfileName is correct`, function () {\r",
-							"    pm.expect(responseData.name).to.equal(deviceProfileName);\r",
-							"});\r",
-							""
+							"    case 200:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
+							"        \r",
+							"        let deviceProfileId = pm.environment.get(\"device_profile_id\");\r",
+							"        let deviceProfileName = pm.environment.get(\"device_profile_name\");\r",
+							"        \r",
+							"        pm.test(`deviceProfileId is correct`, function () {\r",
+							"            pm.expect(responseData.id.id).to.equal(deviceProfileId);\r",
+							"        });\r",
+							"        \r",
+							"        pm.test(`deviceProfileName is correct`, function () {\r",
+							"            pm.expect(responseData.name).to.equal(deviceProfileName);\r",
+							"        });\r",
+							"        break;\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "POST",
 				"header": [
 					{
@@ -587,10 +712,6 @@
 					{
 						"key": "user-agent",
 						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-					},
-					{
-						"key": "x-authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
 					}
 				],
 				"body": {
@@ -620,10 +741,20 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}\r",
+							"\r",
+							"if (pm.iterationData.get(\"bearerToken\") !== \"\") {\r",
+							"    pm.environment.set(\"token\", pm.iterationData.get(\"bearerToken\"));\r",
+							"}\r",
+							"\r",
 							"let randomString = Math.random().toString(36);\r",
 							"pm.environment.set(\"device_name\", \"bluetooth_dv_\" + randomString);"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				},
 				{
@@ -631,14 +762,28 @@
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();\r",
+							"let expectedStatusCode = pm.iterationData.get(\"expectedStatusCode\");\r",
 							"\r",
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
+							"switch (expectedStatusCode) {\r",
+							"    case 401:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        break;\r",
 							"\r",
-							"pm.environment.set(\"device_id\", responseData.id.id);"
+							"    case 200:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
+							"        pm.test(\"Device name is correct\", function () {\r",
+							"            pm.expect(responseData.name).to.equal(pm.environment.get(\"device_name\"));\r",
+							"        });\r",
+							"        pm.environment.set(\"device_id\", responseData.id.id);\r",
+							"        break;\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
@@ -706,11 +851,6 @@
 					{
 						"key": "user-agent",
 						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-					},
-					{
-						"key": "x-authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzA5MDkwOTE5OTlAeW9wbWFpbC5jb20iLCJ1c2VySWQiOiJkYzRmOTA3MS0wM2QzLTExZjAtOWRiYy04MzRkYWRhZDdkZDkiLCJzY29wZXMiOlsiVEVOQU5UX0FETUlOIl0sInNlc3Npb25JZCI6IjVhZGMzZTFkLWE5YzYtNDc4OC05MmJhLTI0YWQ2NWVjN2M1YyIsImV4cCI6MTc0NDA4NjkyNiwiaXNzIjoidGhpbmdzYm9hcmQuaW8iLCJpYXQiOjE3NDIyODY5MjYsImZpcnN0TmFtZSI6InRlc3QiLCJsYXN0TmFtZSI6InRoaW5ncyIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImRhYWViMWIwLTAzZDMtMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.VoK7gwhG70YHI9yb-RSLlcBZCBCYULQ4Em4xbMmJ9SEwfHyLPyRgrRlDSq9x08No-9W-D41gNkg8-x6x4wF3AQ",
-						"disabled": true
 					}
 				],
 				"body": {
@@ -741,28 +881,66 @@
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();\r",
+							"let expectedStatusCode = pm.iterationData.get(\"expectedStatusCode\");\r",
 							"\r",
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
+							"switch (expectedStatusCode) {\r",
+							"    case 401:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        break;\r",
 							"\r",
-							"let deviceId = pm.environment.get(\"device_id\");\r",
-							"let deviceName = pm.environment.get(\"device_name\");\r",
-							"\r",
-							"pm.test(`deviceId is correct`, function () {\r",
-							"    pm.expect(responseData.id.id).to.equal(deviceId);\r",
-							"});\r",
-							"\r",
-							"pm.test(`deviceName is correct`, function () {\r",
-							"    pm.expect(responseData.name).to.equal(deviceName);\r",
-							"});\r",
-							""
+							"    case 200:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
+							"        \r",
+							"        let deviceId = pm.environment.get(\"device_id\");\r",
+							"        let deviceName = pm.environment.get(\"device_name\");\r",
+							"        \r",
+							"        pm.test(`deviceId is correct`, function () {\r",
+							"            pm.expect(responseData.id.id).to.equal(deviceId);\r",
+							"        });\r",
+							"        \r",
+							"        pm.test(`deviceName is correct`, function () {\r",
+							"            pm.expect(responseData.name).to.equal(deviceName);\r",
+							"        });\r",
+							"        break;\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}\r",
+							"\r",
+							"if (pm.iterationData.get(\"bearerToken\") !== \"\") {\r",
+							"    pm.environment.set(\"token\", pm.iterationData.get(\"bearerToken\"));\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
 				"header": [
 					{
@@ -812,10 +990,6 @@
 					{
 						"key": "user-agent",
 						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-					},
-					{
-						"key": "x-authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
 					}
 				],
 				"url": {
@@ -844,23 +1018,52 @@
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();\r",
+							"let expectedStatusCode = pm.iterationData.get(\"expectedStatusCode\");\r",
 							"\r",
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});\r",
+							"switch (expectedStatusCode) {\r",
+							"    case 401:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        break;\r",
 							"\r",
-							"let deviceIds = [];\r",
-							"responseData.data.forEach((item, _) => {\r",
-							"    deviceIds.push(item.id.id);\r",
-							"});\r",
-							"\r",
-							"let checkDvExist = deviceIds.indexOf(pm.environment.get(\"device_id\"));\r",
-							"\r",
-							"pm.test(`Device id exists in list`, function () {\r",
-							"    pm.expect(checkDvExist).to.greaterThan(-1);\r",
-							"});"
+							"    case 200:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
+							"        \r",
+							"        let deviceIds = [];\r",
+							"        responseData.data.forEach((item, _) => {\r",
+							"            deviceIds.push(item.id.id);\r",
+							"        });\r",
+							"        \r",
+							"        let checkDvExist = deviceIds.indexOf(pm.environment.get(\"device_id\"));\r",
+							"        \r",
+							"        pm.test(`Device id exists in list`, function () {\r",
+							"            pm.expect(checkDvExist).to.greaterThan(-1);\r",
+							"        });\r",
+							"        break;\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}\r",
+							"\r",
+							"if (pm.iterationData.get(\"bearerToken\") !== \"\") {\r",
+							"    pm.environment.set(\"token\", pm.iterationData.get(\"bearerToken\"));\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
@@ -968,9 +1171,19 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}\r",
+							"\r",
+							"if (pm.iterationData.get(\"bearerToken\") !== \"\") {\r",
+							"    pm.environment.set(\"token\", pm.iterationData.get(\"bearerToken\"));\r",
+							"}\r",
+							"\r",
 							"pm.environment.set(\"device_name\", pm.environment.get(\"device_name\") + \"_edited\");"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				},
 				{
@@ -978,16 +1191,49 @@
 					"script": {
 						"exec": [
 							"let responseData = pm.response.json();\r",
+							"let expectedStatusCode = pm.iterationData.get(\"expectedStatusCode\");\r",
 							"\r",
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});"
+							"switch (expectedStatusCode) {\r",
+							"    case 401:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        break;\r",
+							"\r",
+							"    case 200:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
+							"\r",
+							"        let deviceId = pm.environment.get(\"device_id\");\r",
+							"        let deviceName = pm.environment.get(\"device_name\");\r",
+							"        \r",
+							"        pm.test(`deviceId is correct`, function () {\r",
+							"            pm.expect(responseData.id.id).to.equal(deviceId);\r",
+							"        });\r",
+							"        \r",
+							"        pm.test(`deviceName is correct`, function () {\r",
+							"            pm.expect(responseData.name).to.equal(deviceName);\r",
+							"        });\r",
+							"        break;\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "POST",
 				"header": [
 					{
@@ -1041,10 +1287,6 @@
 					{
 						"key": "user-agent",
 						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-					},
-					{
-						"key": "x-authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
 					}
 				],
 				"body": {
@@ -1074,15 +1316,55 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});"
+							"let expectedStatusCode = pm.iterationData.get(\"expectedStatusCode\");\r",
+							"\r",
+							"switch (expectedStatusCode) {\r",
+							"    case 401:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        break;\r",
+							"\r",
+							"    case 200:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
+							"        break;\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}\r",
+							"\r",
+							"if (pm.iterationData.get(\"bearerToken\") !== \"\") {\r",
+							"    pm.environment.set(\"token\", pm.iterationData.get(\"bearerToken\"));\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "DELETE",
 				"header": [
 					{
@@ -1136,10 +1418,6 @@
 					{
 						"key": "user-agent",
 						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-					},
-					{
-						"key": "x-authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
 					}
 				],
 				"url": {
@@ -1160,118 +1438,61 @@
 			"response": []
 		},
 		{
-			"name": "Get device by Id after deleting",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"let responseData = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Status code is 404\", function () {\r",
-							"    pm.response.to.have.status(404);\r",
-							"});\r",
-							"\r",
-							"let expectedMessage = `Device with id [${pm.environment.get(\"device_id\")}] is not found`;\r",
-							"\r",
-							"pm.test(`Message is correct`, function () {\r",
-							"    pm.expect(responseData.message).to.equal(expectedMessage);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "accept",
-						"value": "application/json, text/plain, */*"
-					},
-					{
-						"key": "accept-language",
-						"value": "en-US,en;q=0.9"
-					},
-					{
-						"key": "content-type",
-						"value": "application/json"
-					},
-					{
-						"key": "priority",
-						"value": "u=1, i"
-					},
-					{
-						"key": "referer",
-						"value": "https://demo.thingsboard.io/entities/devices"
-					},
-					{
-						"key": "sec-ch-ua",
-						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
-					},
-					{
-						"key": "sec-ch-ua-mobile",
-						"value": "?0"
-					},
-					{
-						"key": "sec-ch-ua-platform",
-						"value": "\"Windows\""
-					},
-					{
-						"key": "sec-fetch-dest",
-						"value": "empty"
-					},
-					{
-						"key": "sec-fetch-mode",
-						"value": "cors"
-					},
-					{
-						"key": "sec-fetch-site",
-						"value": "same-origin"
-					},
-					{
-						"key": "user-agent",
-						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-					},
-					{
-						"key": "x-authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
-					}
-				],
-				"url": {
-					"raw": "https://demo.thingsboard.io/api/device/info/{{device_id}}",
-					"protocol": "https",
-					"host": [
-						"demo",
-						"thingsboard",
-						"io"
-					],
-					"path": [
-						"api",
-						"device",
-						"info",
-						"{{device_id}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Delete device profile",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code is 200\", function () {\r",
-							"    pm.response.to.have.status(200);\r",
-							"});"
+							"let expectedStatusCode = pm.iterationData.get(\"expectedStatusCode\");\r",
+							"\r",
+							"switch (expectedStatusCode) {\r",
+							"    case 401:\r",
+							"        pm.test(\"Status code is 401\", function () {\r",
+							"            pm.response.to.have.status(401);\r",
+							"        });\r",
+							"        break;\r",
+							"\r",
+							"    case 200:\r",
+							"        pm.test(\"Status code is 200\", function () {\r",
+							"            pm.response.to.have.status(200);\r",
+							"        });\r",
+							"        break;\r",
+							"}"
 						],
-						"type": "text/javascript"
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let apiName = pm.iterationData.get(\"apiName\");\r",
+							"if (apiName !== \"\" && apiName !== pm.info.requestName) {\r",
+							"    pm.execution.skipRequest();\r",
+							"}\r",
+							"\r",
+							"if (pm.iterationData.get(\"bearerToken\") !== \"\") {\r",
+							"    pm.environment.set(\"token\", pm.iterationData.get(\"bearerToken\"));\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
 					}
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "DELETE",
 				"header": [
 					{
@@ -1325,106 +1546,6 @@
 					{
 						"key": "user-agent",
 						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-					},
-					{
-						"key": "x-authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
-					}
-				],
-				"url": {
-					"raw": "https://demo.thingsboard.io/api/deviceProfile/{{device_profile_id}}",
-					"protocol": "https",
-					"host": [
-						"demo",
-						"thingsboard",
-						"io"
-					],
-					"path": [
-						"api",
-						"deviceProfile",
-						"{{device_profile_id}}"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Get device profile after deleting",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"let responseData = pm.response.json();\r",
-							"\r",
-							"pm.test(\"Status code is 404\", function () {\r",
-							"    pm.response.to.have.status(404);\r",
-							"});\r",
-							"\r",
-							"let expectedMessage = `Device profile with id [${pm.environment.get(\"device_profile_id\")}] is not found`;\r",
-							"\r",
-							"pm.test(`Message is correct`, function () {\r",
-							"    pm.expect(responseData.message).to.equal(expectedMessage);\r",
-							"});"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "accept",
-						"value": "application/json, text/plain, */*"
-					},
-					{
-						"key": "accept-language",
-						"value": "en-US,en;q=0.9"
-					},
-					{
-						"key": "content-type",
-						"value": "application/json"
-					},
-					{
-						"key": "priority",
-						"value": "u=1, i"
-					},
-					{
-						"key": "referer",
-						"value": "https://demo.thingsboard.io/profiles/deviceProfiles"
-					},
-					{
-						"key": "sec-ch-ua",
-						"value": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\""
-					},
-					{
-						"key": "sec-ch-ua-mobile",
-						"value": "?0"
-					},
-					{
-						"key": "sec-ch-ua-platform",
-						"value": "\"Windows\""
-					},
-					{
-						"key": "sec-fetch-dest",
-						"value": "empty"
-					},
-					{
-						"key": "sec-fetch-mode",
-						"value": "cors"
-					},
-					{
-						"key": "sec-fetch-site",
-						"value": "same-origin"
-					},
-					{
-						"key": "user-agent",
-						"value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-					},
-					{
-						"key": "x-authorization",
-						"value": "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0ZXN0XzIwMjUwMzE5QHlvcG1haWwuY29tIiwidXNlcklkIjoiZTM3ZTdiYjAtMDQ5OS0xMWYwLTlkYmMtODM0ZGFkYWQ3ZGQ5Iiwic2NvcGVzIjpbIlRFTkFOVF9BRE1JTiJdLCJzZXNzaW9uSWQiOiI0NDBhNTkzMy1iZWE5LTRkYjAtYjY4YS03MDdjY2Q3YjE3MTkiLCJleHAiOjE3NDQxNzI2NDcsImlzcyI6InRoaW5nc2JvYXJkLmlvIiwiaWF0IjoxNzQyMzcyNjQ3LCJmaXJzdE5hbWUiOiJ0ZXN0IiwibGFzdE5hbWUiOiJ0aGluZ3Nib2FyZCIsImVuYWJsZWQiOnRydWUsInByaXZhY3lQb2xpY3lBY2NlcHRlZCI6dHJ1ZSwiaXNQdWJsaWMiOmZhbHNlLCJ0ZW5hbnRJZCI6ImUxYjMwYTgwLTA0OTktMTFmMC05ZGJjLTgzNGRhZGFkN2RkOSIsImN1c3RvbWVySWQiOiIxMzgxNDAwMC0xZGQyLTExYjItODA4MC04MDgwODA4MDgwODAifQ.GlnNaIWoRdpxQ71jG4QgSRqsRJWvjXmQgcJ2Wh_pvU6V5HStnB2pwpRAA4hSIC08xbtxlQfvOyEOVmK6polrYQ"
 					}
 				],
 				"url": {
